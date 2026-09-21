@@ -1,0 +1,33 @@
+# Kafka Stress Test Configuration File
+
+# Kafka broker seed list
+brokers:
+  - "localhost:9092"
+
+# Destination topic
+topic: "stress-test-topic"
+
+# Test Execution Parameters
+total_messages: 100000   # 0 = unlimited
+duration: 30s            # 0 = run until total_messages or Ctrl+C
+rate_limit: 0            # messages per second (0 = unlimited maximum throughput)
+workers: 20              # concurrent goroutines producing messages
+
+# Kafka Producer Reliability & Performance
+acks: "1"                # "all", "1", or "0"
+compression: "snappy"    # "none", "snappy", "gzip", "lz4", "zstd"
+
+# Message Key Strategy
+key_mode: "uuid"         # "none" (round-robin partitions), "uuid", "counter", "fixed"
+fixed_key: "default-key" # used only if key_mode is "fixed"
+
+# Payload Strategy
+# "random-json": Generates dynamic random JSON events
+# "file": Reads payload from file (static or with dynamic {{uuid}}, {{counter}}, {{timestamp}} tokens)
+payload_mode: "random-json"
+file_path: "./samples/message_templated.json"
+random_json_size: 0      # extra payload padding in bytes (optional)
+
+# Reporting
+report_interval: 1s      # live progress update interval
+dry_run: false           # simulate generation without network/broker load

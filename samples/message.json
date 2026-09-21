@@ -1,0 +1,14 @@
+{
+  "event_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "source": "payment_service",
+  "action": "TRANSACTION_CREATED",
+  "account_id": "acc_109283",
+  "amount": 250.75,
+  "currency": "BRL",
+  "status": "APPROVED",
+  "details": {
+    "gateway": "stripe",
+    "method": "credit_card",
+    "installments": 1
+  }
+}

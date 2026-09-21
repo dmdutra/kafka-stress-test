@@ -1,0 +1,17 @@
+{
+  "event_id": "{{uuid}}",
+  "sequence": {{counter}},
+  "timestamp": {{timestamp}},
+  "iso_time": "{{timestamp_iso}}",
+  "source": "checkout_gateway",
+  "action": "ORDER_PROCESSED",
+  "account_id": "acc_{{random_int:10000:99999}}",
+  "amount": {{random_int:10:5000}}.99,
+  "currency": "BRL",
+  "status": "APPROVED",
+  "tracking_code": "{{random_str:12}}",
+  "details": {
+    "ip": "10.0.{{random_int:1:254}}.{{random_int:1:254}}",
+    "retries": {{random_int:0:3}}
+  }
+}
