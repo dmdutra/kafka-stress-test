@@ -26,6 +26,14 @@ type Config struct {
 	RandomJsonSize int           `yaml:"random_json_size"`// extra padding size in bytes for random json
 	ReportInterval time.Duration `yaml:"report_interval"` // reporting interval (default 1s)
 	DryRun         bool          `yaml:"dry_run"`         // generate payloads without connecting to Kafka
+
+	// TLS / SSL settings
+	TLSEnabled            bool   `yaml:"tls_enabled"`
+	TLSCAFile             string `yaml:"tls_ca_file"`              // path to CA certificate (PEM)
+	TLSCertFile           string `yaml:"tls_cert_file"`            // path to client certificate (PEM)
+	TLSKeyFile            string `yaml:"tls_key_file"`             // path to client private key (PEM)
+	TLSInsecureSkipVerify bool   `yaml:"tls_insecure_skip_verify"` // skip server certificate verification
+	TLSServerName         string `yaml:"tls_server_name"`          // override SNI server name
 }
 
 // DefaultConfig returns a Config with sensible default settings.
@@ -128,6 +136,30 @@ func (c *Config) Validate() error {
 
 	if c.ReportInterval <= 0 {
 		c.ReportInterval = 1 * time.Second
+	}
+
+	// Auto-enable TLS if certificates or related options are provided
+	if c.TLSCAFile != "" || c.TLSCertFile != "" || c.TLSKeyFile != "" || c.TLSInsecureSkipVerify || c.TLSServerName != "" {
+		c.TLSEnabled = true
+	}
+
+	if c.TLSEnabled {
+		if c.TLSCAFile != "" {
+			if _, err := os.Stat(c.TLSCAFile); err != nil {
+				return fmt.Errorf("tls_ca_file '%s' not found or inaccessible: %w", c.TLSCAFile, err)
+			}
+		}
+		if c.TLSCertFile != "" || c.TLSKeyFile != "" {
+			if c.TLSCertFile == "" || c.TLSKeyFile == "" {
+				return fmt.Errorf("both tls_cert_file and tls_key_file must be specified for mutual TLS (mTLS)")
+			}
+			if _, err := os.Stat(c.TLSCertFile); err != nil {
+				return fmt.Errorf("tls_cert_file '%s' not found or inaccessible: %w", c.TLSCertFile, err)
+			}
+			if _, err := os.Stat(c.TLSKeyFile); err != nil {
+				return fmt.Errorf("tls_key_file '%s' not found or inaccessible: %w", c.TLSKeyFile, err)
+			}
+		}
 	}
 
 	return nil

@@ -28,6 +28,14 @@ payload_mode: "random-json"
 file_path: "./samples/message_templated.json"
 random_json_size: 0      # extra payload padding in bytes (optional)
 
+# TLS / SSL Settings
+tls_enabled: false                # enable TLS/SSL encryption
+tls_ca_file: ""                   # path to CA certificate (PEM) to verify broker
+tls_cert_file: ""                 # path to client certificate (PEM) for mTLS
+tls_key_file: ""                  # path to client private key (PEM) for mTLS
+tls_insecure_skip_verify: false   # skip broker certificate validation (useful for testing with self-signed certs)
+tls_server_name: ""               # optional SNI hostname override
+
 # Reporting
 report_interval: 1s      # live progress update interval
 dry_run: false           # simulate generation without network/broker load

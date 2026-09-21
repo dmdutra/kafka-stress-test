@@ -28,6 +28,12 @@ var (
 	fixedKeyFlag   string
 	reportIntFlag  time.Duration
 	dryRunFlag     bool
+	tlsEnabledFlag bool
+	tlsCAFlag      string
+	tlsCertFlag    string
+	tlsKeyFlag     string
+	tlsInsecureFlag bool
+	tlsServerNameFlag string
 )
 
 var produceCmd = &cobra.Command{
@@ -117,6 +123,24 @@ Examples:
 		if cmd.Flags().Changed("dry-run") {
 			cfg.DryRun = dryRunFlag
 		}
+		if cmd.Flags().Changed("tls") || cmd.Flags().Changed("ssl") {
+			cfg.TLSEnabled = tlsEnabledFlag
+		}
+		if cmd.Flags().Changed("tls-ca") || cmd.Flags().Changed("ssl-ca") {
+			cfg.TLSCAFile = tlsCAFlag
+		}
+		if cmd.Flags().Changed("tls-cert") || cmd.Flags().Changed("ssl-cert") {
+			cfg.TLSCertFile = tlsCertFlag
+		}
+		if cmd.Flags().Changed("tls-key") || cmd.Flags().Changed("ssl-key") {
+			cfg.TLSKeyFile = tlsKeyFlag
+		}
+		if cmd.Flags().Changed("tls-insecure") || cmd.Flags().Changed("ssl-insecure") {
+			cfg.TLSInsecureSkipVerify = tlsInsecureFlag
+		}
+		if cmd.Flags().Changed("tls-server-name") {
+			cfg.TLSServerName = tlsServerNameFlag
+		}
 
 		r, err := runner.NewRunner(cfg)
 		if err != nil {
@@ -144,4 +168,17 @@ func init() {
 	produceCmd.Flags().StringVar(&fixedKeyFlag, "fixed-key", "", "Fixed key string (when key-mode is 'fixed')")
 	produceCmd.Flags().DurationVar(&reportIntFlag, "report-interval", 1*time.Second, "Interval between live progress reports")
 	produceCmd.Flags().BoolVar(&dryRunFlag, "dry-run", false, "Dry run mode (generates payloads and benchmarks without connecting to Kafka)")
+
+	// TLS / SSL flags
+	produceCmd.Flags().BoolVar(&tlsEnabledFlag, "tls", false, "Enable TLS/SSL connection to Kafka brokers")
+	produceCmd.Flags().BoolVar(&tlsEnabledFlag, "ssl", false, "Alias for --tls")
+	produceCmd.Flags().StringVar(&tlsCAFlag, "tls-ca", "", "Path to CA certificate file (PEM) to verify broker")
+	produceCmd.Flags().StringVar(&tlsCAFlag, "ssl-ca", "", "Alias for --tls-ca")
+	produceCmd.Flags().StringVar(&tlsCertFlag, "tls-cert", "", "Path to client certificate file (PEM) for mTLS")
+	produceCmd.Flags().StringVar(&tlsCertFlag, "ssl-cert", "", "Alias for --tls-cert")
+	produceCmd.Flags().StringVar(&tlsKeyFlag, "tls-key", "", "Path to client private key file (PEM) for mTLS")
+	produceCmd.Flags().StringVar(&tlsKeyFlag, "ssl-key", "", "Alias for --tls-key")
+	produceCmd.Flags().BoolVar(&tlsInsecureFlag, "tls-insecure", false, "Skip broker certificate verification (insecure)")
+	produceCmd.Flags().BoolVar(&tlsInsecureFlag, "ssl-insecure", false, "Alias for --tls-insecure")
+	produceCmd.Flags().StringVar(&tlsServerNameFlag, "tls-server-name", "", "Override TLS server name (SNI)")
 }

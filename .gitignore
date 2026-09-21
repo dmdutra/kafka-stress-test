@@ -8,6 +8,8 @@
 *.so
 *.dylib
 kafka-stress-test
+kafka-stress
+kafka-stress*
 
 # Test binary, built with `go test -c`
 *.test

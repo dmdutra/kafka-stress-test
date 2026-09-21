@@ -29,6 +29,12 @@ Powered by the pure Go [`franz-go`](https://github.com/twmb/franz-go) client (ze
   - Acknowledgment modes: `acks=all`, `acks=1`, `acks=0`.
   - Batch compression: `snappy`, `zstd`, `gzip`, `lz4`, `none`.
   - Automatic destination topic verification and creation before testing.
+- **SSL / TLS Security**:
+  - Standard TLS encryption for secure clusters (`--tls` or `--ssl`).
+  - Custom Root CA certificate validation (`--tls-ca`).
+  - Mutual TLS (mTLS) client authentication with certificate and private key (`--tls-cert` and `--tls-key`).
+  - Skip verification option for development with self-signed certs (`--tls-insecure`).
+  - Custom SNI server name override (`--tls-server-name`).
 - **Real-Time Metrics & Reporting**:
   - Live 1-second interval status ticker: sent count, throughput (msg/s and MB/s), latency percentiles (p50, p95, p99), and error count.
   - Comprehensive final test summary with complete latency breakdown (Min, Avg, p50, p90, p95, p99, Max) and error details.
@@ -216,7 +222,48 @@ Run referencing the YAML file:
 
 ---
 
-### 6. Dry Run Mode (Local Payload Generation Benchmark)
+### 6. Connecting to Clusters with SSL / TLS
+
+#### Standard TLS / SSL
+```bash
+./kafka-stress-test produce \
+  --brokers kafka-broker.corp:9093 \
+  --topic secure-topic \
+  --tls \
+  --total 50000
+```
+
+#### Custom CA & Self-Signed Certificates
+```bash
+# Verify broker against an internal enterprise CA:
+./kafka-stress-test produce \
+  --brokers kafka-broker.corp:9093 \
+  --topic secure-topic \
+  --tls-ca /path/to/ca.pem \
+  --total 50000
+
+# Or skip certificate verification (testing environments):
+./kafka-stress-test produce \
+  --brokers kafka-broker.corp:9093 \
+  --topic secure-topic \
+  --tls --tls-insecure \
+  --total 50000
+```
+
+#### Mutual TLS (mTLS) Authentication
+```bash
+./kafka-stress-test produce \
+  --brokers kafka-broker.corp:9093 \
+  --topic secure-topic \
+  --tls-ca /path/to/ca.pem \
+  --tls-cert /path/to/client.pem \
+  --tls-key /path/to/client.key \
+  --total 50000
+```
+
+---
+
+### 7. Dry Run Mode (Local Payload Generation Benchmark)
 
 Benchmark the maximum generation speed on your machine without connecting to any Kafka broker:
 

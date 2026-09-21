@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"crypto/tls"
+	"crypto/x509"
+	"os"
 	"time"
 
 	"github.com/twmb/franz-go/pkg/kadm"
@@ -58,6 +61,15 @@ func NewProducer(cfg *config.Config) (*Producer, error) {
 		opts = append(opts, kgo.ProducerBatchCompression(kgo.SnappyCompression()))
 	}
 
+	// Configure TLS / SSL
+	if cfg.TLSEnabled {
+		tlsConfig, err := buildTLSConfig(cfg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to configure TLS: %w", err)
+		}
+		opts = append(opts, kgo.DialTLSConfig(tlsConfig))
+	}
+
 	client, err := kgo.NewClient(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kafka client: %w", err)
@@ -67,6 +79,35 @@ func NewProducer(cfg *config.Config) (*Producer, error) {
 		client: client,
 		topic:  cfg.Topic,
 	}, nil
+}
+
+func buildTLSConfig(cfg *config.Config) (*tls.Config, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: cfg.TLSInsecureSkipVerify,
+		ServerName:         cfg.TLSServerName,
+	}
+
+	if cfg.TLSCAFile != "" {
+		caCert, err := os.ReadFile(cfg.TLSCAFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read TLS CA file: %w", err)
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			return nil, fmt.Errorf("failed to parse CA certificate from '%s'", cfg.TLSCAFile)
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+
+	if cfg.TLSCertFile != "" && cfg.TLSKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(cfg.TLSCertFile, cfg.TLSKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificate/key pair: %w", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	return tlsConfig, nil
 }
 
 // EnsureTopic creates the topic if it does not already exist.

@@ -113,3 +113,41 @@ func TestValidationErrors(t *testing.T) {
 		t.Errorf("expected error for non-existent file")
 	}
 }
+
+func TestTLSValidation(t *testing.T) {
+	tempDir := t.TempDir()
+	caPath := filepath.Join(tempDir, "ca.pem")
+	certPath := filepath.Join(tempDir, "cert.pem")
+	keyPath := filepath.Join(tempDir, "key.pem")
+
+	_ = os.WriteFile(caPath, []byte("fake-ca"), 0644)
+	_ = os.WriteFile(certPath, []byte("fake-cert"), 0644)
+	_ = os.WriteFile(keyPath, []byte("fake-key"), 0644)
+
+	// Valid TLS config
+	cfg := DefaultConfig()
+	cfg.TLSEnabled = true
+	cfg.TLSCAFile = caPath
+	cfg.TLSCertFile = certPath
+	cfg.TLSKeyFile = keyPath
+	cfg.TLSInsecureSkipVerify = true
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("expected valid TLS config, got: %v", err)
+	}
+
+	// Missing CA file
+	cfg = DefaultConfig()
+	cfg.TLSEnabled = true
+	cfg.TLSCAFile = "non-existent-ca.pem"
+	if err := cfg.Validate(); err == nil {
+		t.Errorf("expected error for missing CA file")
+	}
+
+	// Incomplete mTLS: cert without key
+	cfg = DefaultConfig()
+	cfg.TLSEnabled = true
+	cfg.TLSCertFile = certPath
+	if err := cfg.Validate(); err == nil {
+		t.Errorf("expected error for mTLS cert without key")
+	}
+}
