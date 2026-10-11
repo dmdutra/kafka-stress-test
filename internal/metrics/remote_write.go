@@ -134,6 +134,16 @@ func translate(families []*dto.MetricFamily, tsMs int64) []prompb.TimeSeries {
 							Samples: []prompb.Sample{{Value: float64(b.GetCumulativeCount()), Timestamp: tsMs}},
 						})
 					}
+
+					// +Inf bucket (implicit in protobuf, must be explicitly sent to Remote Write)
+					infLabels := make([]prompb.Label, len(baseLabels))
+					copy(infLabels, baseLabels)
+					infLabels[0].Value = name + "_bucket"
+					infLabels = append(infLabels, prompb.Label{Name: "le", Value: "+Inf"})
+					timeseries = append(timeseries, prompb.TimeSeries{
+						Labels:  infLabels,
+						Samples: []prompb.Sample{{Value: float64(m.Histogram.GetSampleCount()), Timestamp: tsMs}},
+					})
 				}
 			}
 		}
