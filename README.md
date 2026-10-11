@@ -352,11 +352,14 @@ Upon completion, a detailed test summary is generated:
 
 ---
 
-## 🐳 Local Kafka Environment (Docker Compose)
+## 🐳 Local Environment (Docker Compose)
 
-If you need a local standalone Kafka broker for testing, a pre-configured `docker-compose.yml` (KRaft mode, no ZooKeeper needed) is included:
+If you need a local standalone Kafka broker and metrics observability stack for testing, a pre-configured `docker-compose.yml` (KRaft mode, no ZooKeeper needed) is included:
 
 ```bash
 docker compose up -d
 ```
-This starts an Apache Kafka broker listening on port `9092`.
+This starts:
+- **Apache Kafka (KRaft)**: listening on `localhost:9092`
+- **Prometheus**: listening on `http://localhost:9090` (with Remote Write receiver enabled)
+- **Prometheus Pushgateway**: listening on `http://localhost:9091`
