@@ -37,6 +37,7 @@ var (
 	promPortFlag   int
 	pushGwURLFlag  string
 	pushGwJobFlag  string
+	remoteWriteFlag string
 )
 
 var produceCmd = &cobra.Command{
@@ -135,6 +136,9 @@ Examples:
 		if cmd.Flags().Changed("pushgateway-job") {
 			cfg.PushgatewayJob = pushGwJobFlag
 		}
+		if cmd.Flags().Changed("remote-write-url") {
+			cfg.RemoteWriteURL = remoteWriteFlag
+		}
 		if cmd.Flags().Changed("tls") || cmd.Flags().Changed("ssl") {
 			cfg.TLSEnabled = tlsEnabledFlag
 		}
@@ -183,6 +187,7 @@ func init() {
 	produceCmd.Flags().IntVar(&promPortFlag, "prometheus-port", 0, "Port to expose Prometheus metrics (0 = disabled)")
 	produceCmd.Flags().StringVar(&pushGwURLFlag, "pushgateway-url", "", "Prometheus Pushgateway URL (e.g. http://localhost:9091)")
 	produceCmd.Flags().StringVar(&pushGwJobFlag, "pushgateway-job", "kafka_stress_test", "Job name for Prometheus Pushgateway")
+	produceCmd.Flags().StringVar(&remoteWriteFlag, "remote-write-url", "", "Prometheus Remote Write URL (e.g. http://localhost:9090/api/v1/write)")
 
 	// TLS / SSL flags
 	produceCmd.Flags().BoolVar(&tlsEnabledFlag, "tls", false, "Enable TLS/SSL connection to Kafka brokers")

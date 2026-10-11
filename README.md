@@ -43,6 +43,7 @@ Powered by the pure Go [`franz-go`](https://github.com/twmb/franz-go) client (ze
 - **Prometheus Metrics**:
   - Expose a `/metrics` HTTP endpoint (`--prometheus-port 8080`) to scrape internal metrics dynamically via Prometheus while tests are running.
   - Push metrics automatically to a Prometheus Pushgateway (`--pushgateway-url http://localhost:9091`).
+  - Send metrics directly to Prometheus via native Remote Write protocol (`--remote-write-url http://localhost:9090/api/v1/write`).
 
 ---
 
@@ -278,7 +279,7 @@ Benchmark the maximum generation speed on your machine without connecting to any
 
 ### 8. Exposing Prometheus Metrics
 
-You can integrate with Prometheus in two ways:
+You can integrate with Prometheus in three ways:
 
 **Option A: Scrape via HTTP (/metrics)**
 Start the producer and expose metrics dynamically on a specified HTTP port (e.g., `8080`).
@@ -302,6 +303,17 @@ Push metrics automatically to a remote Pushgateway. This is ideal for short-live
   --total 500000 \
   --pushgateway-url "http://localhost:9091" \
   --pushgateway-job "my_custom_stress_test"
+```
+
+**Option C: Direct Push via Remote Write**
+Send metrics directly to a Prometheus backend (or Thanos, VictoriaMetrics, Cortex) using the native Protobuf Remote Write protocol.
+
+```bash
+./kafka-stress-test produce \
+  --brokers localhost:9092 \
+  --topic stress-test-topic \
+  --total 500000 \
+  --remote-write-url "http://localhost:9090/api/v1/write"
 ```
 
 Available metrics include `kafka_stress_messages_sent_total`, `kafka_stress_bytes_sent_total`, `kafka_stress_messages_failed_total`, and a latency histogram `kafka_stress_latency_seconds`.

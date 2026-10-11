@@ -29,6 +29,7 @@ type Config struct {
 	PrometheusPort int           `yaml:"prometheus_port"` // port for prometheus metrics (0 = disabled)
 	PushgatewayURL string        `yaml:"pushgateway_url"` // Prometheus Pushgateway URL (e.g., http://localhost:9091)
 	PushgatewayJob string        `yaml:"pushgateway_job"` // Job name for Pushgateway
+	RemoteWriteURL string        `yaml:"remote_write_url"`// Prometheus Remote Write URL (e.g., http://localhost:9090/api/v1/write)
 
 	// TLS / SSL settings
 	TLSEnabled            bool   `yaml:"tls_enabled"`

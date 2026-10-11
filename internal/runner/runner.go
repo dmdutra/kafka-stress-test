@@ -66,7 +66,7 @@ func NewRunner(cfg *config.Config) (*Runner, error) {
 		cfg:        cfg,
 		keyGen:     keyGen,
 		payloadGen: payloadGen,
-		metrics:    metrics.NewMetrics(cfg.PrometheusPort > 0 || cfg.PushgatewayURL != ""),
+		metrics:    metrics.NewMetrics(cfg.PrometheusPort > 0 || cfg.PushgatewayURL != "" || cfg.RemoteWriteURL != ""),
 		producer:   prod,
 	}, nil
 }
@@ -147,6 +147,14 @@ func (r *Runner) Run(parentCtx context.Context) error {
 		go r.startPushgateway(ctx, pushDone)
 	}
 
+	// Remote Write ticker
+	var rwDone chan struct{}
+	if r.cfg.RemoteWriteURL != "" {
+		rwDone = make(chan struct{})
+		fmt.Printf("Starting Prometheus Remote Write client: %s\n", r.cfg.RemoteWriteURL)
+		go metrics.StartRemoteWrite(ctx, r.cfg.RemoteWriteURL, r.cfg.ReportInterval, rwDone)
+	}
+
 	var messageCounter atomic.Int64
 	var workerWg sync.WaitGroup
 	var inFlightWg sync.WaitGroup
@@ -196,6 +204,9 @@ func (r *Runner) Run(parentCtx context.Context) error {
 	<-reporterDone
 	if pushDone != nil {
 		<-pushDone
+	}
+	if rwDone != nil {
+		<-rwDone
 	}
 	r.metrics.Stop()
 
