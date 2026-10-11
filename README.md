@@ -6,7 +6,7 @@ Powered by the pure Go [`franz-go`](https://github.com/twmb/franz-go) client (ze
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Multiple Payload Modes**:
   - `random-json`: Generates realistic, complex JSON events at runtime (UUID v4 IDs, millisecond and ISO8601 timestamps, monotonic sequences, user IDs, amounts, currencies, statuses, and client device metadata).
@@ -47,7 +47,7 @@ Powered by the pure Go [`franz-go`](https://github.com/twmb/franz-go) client (ze
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 kafka-stress-test/
@@ -72,7 +72,7 @@ kafka-stress-test/
 
 ---
 
-## 🛠️ Build & Installation
+## Build & Installation
 
 Prerequisites: **Go 1.22+** installed.
 
@@ -92,7 +92,7 @@ go test -v ./...
 
 ---
 
-## 📖 Usage Examples
+## Usage Examples
 
 ### 1. Produce Messages with Randomized JSON
 
@@ -320,7 +320,7 @@ Available metrics include `kafka_stress_messages_sent_total`, `kafka_stress_byte
 
 ---
 
-## 📊 Metrics & Reports
+## Metrics & Reports
 
 During execution, a live status update is printed every second:
 ```text
@@ -352,7 +352,7 @@ Upon completion, a detailed test summary is generated:
 
 ---
 
-## 🐳 Local Environment (Docker Compose)
+## Local Environment (Docker Compose)
 
 If you need a local standalone Kafka broker and metrics observability stack for testing, a pre-configured `docker-compose.yml` (KRaft mode, no ZooKeeper needed) is included:
 
