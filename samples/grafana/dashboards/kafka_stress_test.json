@@ -1,0 +1,49 @@
+{
+  "title": "Kafka Stress Test",
+  "tags": ["kafka", "stress-test"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "schemaVersion": 36,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Messages Sent",
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+      "targets": [ { "expr": "sum(kafka_stress_messages_sent_total)", "legendFormat": "Messages" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Data Sent (MB)",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "targets": [ { "expr": "sum(kafka_stress_bytes_sent_total) / 1024 / 1024", "legendFormat": "MB" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Errors",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "targets": [ { "expr": "sum(kafka_stress_messages_failed_total)", "legendFormat": "Errors" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Throughput (Messages / sec)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [ { "expr": "sum(rate(kafka_stress_messages_sent_total[10s]))", "legendFormat": "Msg/s" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Throughput (MB / sec)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [ { "expr": "sum(rate(kafka_stress_bytes_sent_total[10s])) / 1024 / 1024", "legendFormat": "MB/s" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency Percentiles (Seconds)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "histogram_quantile(0.99, sum(rate(kafka_stress_latency_seconds_bucket[10s])) by (le))", "legendFormat": "p99" },
+        { "expr": "histogram_quantile(0.95, sum(rate(kafka_stress_latency_seconds_bucket[10s])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.50, sum(rate(kafka_stress_latency_seconds_bucket[10s])) by (le))", "legendFormat": "p50" }
+      ]
+    }
+  ]
+}
