@@ -11,7 +11,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"golang.org/x/time/rate"
 	"kafka-stress-test/internal/config"
@@ -64,7 +66,7 @@ func NewRunner(cfg *config.Config) (*Runner, error) {
 		cfg:        cfg,
 		keyGen:     keyGen,
 		payloadGen: payloadGen,
-		metrics:    metrics.NewMetrics(cfg.PrometheusPort > 0),
+		metrics:    metrics.NewMetrics(cfg.PrometheusPort > 0 || cfg.PushgatewayURL != ""),
 		producer:   prod,
 	}, nil
 }
@@ -137,6 +139,14 @@ func (r *Runner) Run(parentCtx context.Context) error {
 	reporterDone := make(chan struct{})
 	go r.startReporter(ctx, reporterDone)
 
+	// Pushgateway ticker
+	var pushDone chan struct{}
+	if r.cfg.PushgatewayURL != "" {
+		pushDone = make(chan struct{})
+		fmt.Printf("Starting Pushgateway client: %s (job: %s)\n", r.cfg.PushgatewayURL, r.cfg.PushgatewayJob)
+		go r.startPushgateway(ctx, pushDone)
+	}
+
 	var messageCounter atomic.Int64
 	var workerWg sync.WaitGroup
 	var inFlightWg sync.WaitGroup
@@ -184,6 +194,9 @@ func (r *Runner) Run(parentCtx context.Context) error {
 	// Stop reporter and metrics
 	cancel()
 	<-reporterDone
+	if pushDone != nil {
+		<-pushDone
+	}
 	r.metrics.Stop()
 
 	if !r.cfg.DryRun && r.producer != nil {
@@ -247,6 +260,30 @@ func (r *Runner) startReporter(ctx context.Context, done chan<- struct{}) {
 		case <-ticker.C:
 			snap := r.metrics.Tick()
 			fmt.Println(snap.FormatSnapshot())
+		}
+	}
+}
+
+func (r *Runner) startPushgateway(ctx context.Context, done chan<- struct{}) {
+	defer close(done)
+	ticker := time.NewTicker(r.cfg.ReportInterval)
+	defer ticker.Stop()
+
+	pusher := push.New(r.cfg.PushgatewayURL, r.cfg.PushgatewayJob).Gatherer(prometheus.DefaultGatherer)
+
+	for {
+		select {
+		case <-ctx.Done():
+			// Attempt one final push before exiting
+			if err := pusher.Push(); err != nil {
+				fmt.Printf("Final Pushgateway push failed: %v\n", err)
+			}
+			return
+		case <-ticker.C:
+			if err := pusher.Push(); err != nil {
+				// Don't spam the console too much, but log if needed.
+				// In a real CLI, we might want to rate-limit this error.
+			}
 		}
 	}
 }

@@ -35,6 +35,8 @@ var (
 	tlsInsecureFlag bool
 	tlsServerNameFlag string
 	promPortFlag   int
+	pushGwURLFlag  string
+	pushGwJobFlag  string
 )
 
 var produceCmd = &cobra.Command{
@@ -127,6 +129,12 @@ Examples:
 		if cmd.Flags().Changed("prometheus-port") {
 			cfg.PrometheusPort = promPortFlag
 		}
+		if cmd.Flags().Changed("pushgateway-url") {
+			cfg.PushgatewayURL = pushGwURLFlag
+		}
+		if cmd.Flags().Changed("pushgateway-job") {
+			cfg.PushgatewayJob = pushGwJobFlag
+		}
 		if cmd.Flags().Changed("tls") || cmd.Flags().Changed("ssl") {
 			cfg.TLSEnabled = tlsEnabledFlag
 		}
@@ -173,6 +181,8 @@ func init() {
 	produceCmd.Flags().DurationVar(&reportIntFlag, "report-interval", 1*time.Second, "Interval between live progress reports")
 	produceCmd.Flags().BoolVar(&dryRunFlag, "dry-run", false, "Dry run mode (generates payloads and benchmarks without connecting to Kafka)")
 	produceCmd.Flags().IntVar(&promPortFlag, "prometheus-port", 0, "Port to expose Prometheus metrics (0 = disabled)")
+	produceCmd.Flags().StringVar(&pushGwURLFlag, "pushgateway-url", "", "Prometheus Pushgateway URL (e.g. http://localhost:9091)")
+	produceCmd.Flags().StringVar(&pushGwJobFlag, "pushgateway-job", "kafka_stress_test", "Job name for Prometheus Pushgateway")
 
 	// TLS / SSL flags
 	produceCmd.Flags().BoolVar(&tlsEnabledFlag, "tls", false, "Enable TLS/SSL connection to Kafka brokers")

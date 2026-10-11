@@ -42,6 +42,7 @@ Powered by the pure Go [`franz-go`](https://github.com/twmb/franz-go) client (ze
   - `--dry-run` flag to benchmark and validate payload generation speed locally without network or broker overhead.
 - **Prometheus Metrics**:
   - Expose a `/metrics` HTTP endpoint (`--prometheus-port 8080`) to scrape internal metrics dynamically via Prometheus while tests are running.
+  - Push metrics automatically to a Prometheus Pushgateway (`--pushgateway-url http://localhost:9091`).
 
 ---
 
@@ -277,7 +278,10 @@ Benchmark the maximum generation speed on your machine without connecting to any
 
 ### 8. Exposing Prometheus Metrics
 
-Start the producer and expose metrics dynamically on a specified HTTP port (e.g. `8080`).
+You can integrate with Prometheus in two ways:
+
+**Option A: Scrape via HTTP (/metrics)**
+Start the producer and expose metrics dynamically on a specified HTTP port (e.g., `8080`).
 
 ```bash
 ./kafka-stress-test produce \
@@ -286,7 +290,21 @@ Start the producer and expose metrics dynamically on a specified HTTP port (e.g.
   --total 500000 \
   --prometheus-port 8080
 ```
-Then scrape metrics continuously (or view manually at `http://localhost:8080/metrics`). Available metrics include `kafka_stress_messages_sent_total`, `kafka_stress_bytes_sent_total`, `kafka_stress_messages_failed_total`, and a latency histogram `kafka_stress_latency_seconds`.
+Then scrape metrics continuously (or view manually at `http://localhost:8080/metrics`).
+
+**Option B: Push to Prometheus Pushgateway**
+Push metrics automatically to a remote Pushgateway. This is ideal for short-lived benchmark runs.
+
+```bash
+./kafka-stress-test produce \
+  --brokers localhost:9092 \
+  --topic stress-test-topic \
+  --total 500000 \
+  --pushgateway-url "http://localhost:9091" \
+  --pushgateway-job "my_custom_stress_test"
+```
+
+Available metrics include `kafka_stress_messages_sent_total`, `kafka_stress_bytes_sent_total`, `kafka_stress_messages_failed_total`, and a latency histogram `kafka_stress_latency_seconds`.
 
 ---
 
