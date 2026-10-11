@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"golang.org/x/time/rate"
 	"kafka-stress-test/internal/config"
@@ -62,7 +64,7 @@ func NewRunner(cfg *config.Config) (*Runner, error) {
 		cfg:        cfg,
 		keyGen:     keyGen,
 		payloadGen: payloadGen,
-		metrics:    metrics.NewMetrics(),
+		metrics:    metrics.NewMetrics(cfg.PrometheusPort > 0),
 		producer:   prod,
 	}, nil
 }
@@ -98,6 +100,23 @@ func (r *Runner) Run(parentCtx context.Context) error {
 		fmt.Printf("Connected successfully to topic '%s'.\n", r.cfg.Topic)
 	} else if r.cfg.DryRun {
 		fmt.Println("[DRY RUN] Simulating message generation without Kafka brokers...")
+	}
+
+	if r.cfg.PrometheusPort > 0 {
+		go func() {
+			mux := http.NewServeMux()
+			mux.Handle("/metrics", promhttp.Handler())
+			addr := fmt.Sprintf(":%d", r.cfg.PrometheusPort)
+			fmt.Printf("Starting Prometheus metrics server on http://localhost%s/metrics\n", addr)
+			server := &http.Server{Addr: addr, Handler: mux}
+			go func() {
+				<-ctx.Done()
+				server.Close()
+			}()
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				fmt.Printf("Prometheus metrics server failed: %v\n", err)
+			}
+		}()
 	}
 
 	fmt.Printf("Starting stress test: Workers=%d, RateLimit=%d msg/s, PayloadMode=%s, Acks=%s, Compression=%s\n",

@@ -34,6 +34,7 @@ var (
 	tlsKeyFlag     string
 	tlsInsecureFlag bool
 	tlsServerNameFlag string
+	promPortFlag   int
 )
 
 var produceCmd = &cobra.Command{
@@ -123,6 +124,9 @@ Examples:
 		if cmd.Flags().Changed("dry-run") {
 			cfg.DryRun = dryRunFlag
 		}
+		if cmd.Flags().Changed("prometheus-port") {
+			cfg.PrometheusPort = promPortFlag
+		}
 		if cmd.Flags().Changed("tls") || cmd.Flags().Changed("ssl") {
 			cfg.TLSEnabled = tlsEnabledFlag
 		}
@@ -168,6 +172,7 @@ func init() {
 	produceCmd.Flags().StringVar(&fixedKeyFlag, "fixed-key", "", "Fixed key string (when key-mode is 'fixed')")
 	produceCmd.Flags().DurationVar(&reportIntFlag, "report-interval", 1*time.Second, "Interval between live progress reports")
 	produceCmd.Flags().BoolVar(&dryRunFlag, "dry-run", false, "Dry run mode (generates payloads and benchmarks without connecting to Kafka)")
+	produceCmd.Flags().IntVar(&promPortFlag, "prometheus-port", 0, "Port to expose Prometheus metrics (0 = disabled)")
 
 	// TLS / SSL flags
 	produceCmd.Flags().BoolVar(&tlsEnabledFlag, "tls", false, "Enable TLS/SSL connection to Kafka brokers")

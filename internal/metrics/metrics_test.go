@@ -8,7 +8,7 @@ import (
 )
 
 func TestMetricsRecordAndSnapshot(t *testing.T) {
-	m := NewMetrics()
+	m := NewMetrics(false)
 
 	m.RecordSuccess(5*time.Millisecond, 100)
 	m.RecordSuccess(15*time.Millisecond, 200)

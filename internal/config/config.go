@@ -26,6 +26,7 @@ type Config struct {
 	RandomJsonSize int           `yaml:"random_json_size"`// extra padding size in bytes for random json
 	ReportInterval time.Duration `yaml:"report_interval"` // reporting interval (default 1s)
 	DryRun         bool          `yaml:"dry_run"`         // generate payloads without connecting to Kafka
+	PrometheusPort int           `yaml:"prometheus_port"` // port for prometheus metrics (0 = disabled)
 
 	// TLS / SSL settings
 	TLSEnabled            bool   `yaml:"tls_enabled"`
@@ -54,6 +55,7 @@ func DefaultConfig() *Config {
 		RandomJsonSize: 0,
 		ReportInterval: 1 * time.Second,
 		DryRun:         false,
+		PrometheusPort: 0,
 	}
 }
 

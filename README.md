@@ -40,6 +40,8 @@ Powered by the pure Go [`franz-go`](https://github.com/twmb/franz-go) client (ze
   - Comprehensive final test summary with complete latency breakdown (Min, Avg, p50, p90, p95, p99, Max) and error details.
 - **Dry Run Mode**:
   - `--dry-run` flag to benchmark and validate payload generation speed locally without network or broker overhead.
+- **Prometheus Metrics**:
+  - Expose a `/metrics` HTTP endpoint (`--prometheus-port 8080`) to scrape internal metrics dynamically via Prometheus while tests are running.
 
 ---
 
@@ -270,6 +272,21 @@ Benchmark the maximum generation speed on your machine without connecting to any
 ```bash
 ./kafka-stress-test produce --payload-mode random-json --total 200000 --workers 10 --dry-run
 ```
+
+---
+
+### 8. Exposing Prometheus Metrics
+
+Start the producer and expose metrics dynamically on a specified HTTP port (e.g. `8080`).
+
+```bash
+./kafka-stress-test produce \
+  --brokers localhost:9092 \
+  --topic stress-test-topic \
+  --total 500000 \
+  --prometheus-port 8080
+```
+Then scrape metrics continuously (or view manually at `http://localhost:8080/metrics`). Available metrics include `kafka_stress_messages_sent_total`, `kafka_stress_bytes_sent_total`, `kafka_stress_messages_failed_total`, and a latency histogram `kafka_stress_latency_seconds`.
 
 ---
 

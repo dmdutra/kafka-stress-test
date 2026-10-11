@@ -38,4 +38,5 @@ tls_server_name: ""               # optional SNI hostname override
 
 # Reporting
 report_interval: 1s      # live progress update interval
+prometheus_port: 0       # HTTP port to expose Prometheus metrics on /metrics (0 = disabled)
 dry_run: false           # simulate generation without network/broker load

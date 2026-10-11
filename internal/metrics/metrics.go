@@ -6,7 +6,36 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	promMessagesSent = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "kafka_stress_messages_sent_total",
+		Help: "Total number of successfully sent messages.",
+	})
+	promBytesSent = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "kafka_stress_bytes_sent_total",
+		Help: "Total number of successfully sent bytes.",
+	})
+	promMessagesFailed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "kafka_stress_messages_failed_total",
+		Help: "Total number of failed messages.",
+	})
+	promLatency = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "kafka_stress_latency_seconds",
+		Help:    "Latency of successfully sent messages.",
+		Buckets: prometheus.ExponentialBuckets(0.001, 2, 15), // 1ms to ~16s
+	})
+)
+
+func init() {
+	prometheus.MustRegister(promMessagesSent)
+	prometheus.MustRegister(promBytesSent)
+	prometheus.MustRegister(promMessagesFailed)
+	prometheus.MustRegister(promLatency)
+}
 
 // Metrics collects and calculates throughput and latency statistics.
 type Metrics struct {
@@ -25,6 +54,8 @@ type Metrics struct {
 	lastTickTime     time.Time
 	lastTickMessages int64
 	lastTickBytes    int64
+
+	promEnabled bool
 }
 
 // Snapshot represents a point-in-time view of the test metrics.
@@ -48,12 +79,13 @@ type Snapshot struct {
 }
 
 // NewMetrics initializes a new Metrics tracker.
-func NewMetrics() *Metrics {
+func NewMetrics(promEnabled bool) *Metrics {
 	now := time.Now()
 	m := &Metrics{
 		startTime:    now,
 		lastTickTime: now,
 		latencies:    make([]time.Duration, 0, 500000),
+		promEnabled:  promEnabled,
 	}
 	m.lastError.Store("")
 	return m
@@ -63,6 +95,12 @@ func NewMetrics() *Metrics {
 func (m *Metrics) RecordSuccess(latency time.Duration, bytesLen int) {
 	m.sentMessages.Add(1)
 	m.sentBytes.Add(int64(bytesLen))
+
+	if m.promEnabled {
+		promMessagesSent.Inc()
+		promBytesSent.Add(float64(bytesLen))
+		promLatency.Observe(latency.Seconds())
+	}
 
 	m.mu.Lock()
 	// Cap reservoir sample size to prevent unbounded memory growth in long tests
@@ -75,6 +113,9 @@ func (m *Metrics) RecordSuccess(latency time.Duration, bytesLen int) {
 // RecordFailure records a failure to produce a message.
 func (m *Metrics) RecordFailure(err error) {
 	m.failedMsgs.Add(1)
+	if m.promEnabled {
+		promMessagesFailed.Inc()
+	}
 	if err != nil {
 		m.lastError.Store(err.Error())
 	}
