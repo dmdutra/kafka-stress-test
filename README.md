@@ -364,3 +364,5 @@ This starts:
 - **Prometheus**: listening on `http://localhost:9090` (with Remote Write receiver enabled)
 - **Prometheus Pushgateway**: listening on `http://localhost:9091`
 - **Grafana**: listening on `http://localhost:3000` (auto-configured with a default Kafka Stress Test dashboard)
+
+![Grafana Dashboard](docs/grafana.png)
